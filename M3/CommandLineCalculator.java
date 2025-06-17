@@ -1,3 +1,68 @@
+// package M3;
+
+// import java.text.DecimalFormat;
+
+// public class CommandLineCalculator extends BaseClass {
+//     private static String ucid = "ps55"; // <-- your UCID
+
+//     public static void main(String[] args) {
+//         printHeader(ucid, 1, "Objective: Implement a calculator using command-line arguments.");
+
+//         if (args.length != 3) {
+//             System.out.println("Usage: java M3.CommandLineCalculator <num1> <operator> <num2>");
+//             printFooter(ucid, 1);
+//             return;
+//         }
+
+//         try {
+//             String num1Str = args[0];
+//             String operator = args[1];
+//             String num2Str = args[2];
+
+//             if (!operator.equals("+") && !operator.equals("-")) {
+//                 System.out.println("Error: Only + and - operators are supported.");
+//                 printFooter(ucid, 1);
+//                 return;
+//             }
+
+//             int decimalPlaces = Math.max(getDecimalPlaces(num1Str), getDecimalPlaces(num2Str));
+//             DecimalFormat formatter = new DecimalFormat(getDecimalFormat(decimalPlaces));
+
+//             double num1 = Double.parseDouble(num1Str);
+//             double num2 = Double.parseDouble(num2Str);
+//             double result = operator.equals("+") ? num1 + num2 : num1 - num2;
+
+//             System.out.println("Result: " + formatter.format(result));
+//         } catch (NumberFormatException e) {
+//             System.out.println("Invalid number format. Please enter valid numbers.");
+//         } catch (Exception e) {
+//             System.out.println("Unexpected error: " + e.getMessage());
+//         }
+
+//         printFooter(ucid, 1);
+//     }
+
+//     private static int getDecimalPlaces(String num) {
+//         if (num.contains(".")) {
+//             return num.length() - num.indexOf('.') - 1;
+//         }
+//         return 0;
+//     }
+
+//     private static String getDecimalFormat(int decimalPlaces) {
+//         return decimalPlaces == 0 ? "0" : "0." + repeatZeros(decimalPlaces);
+//     }
+
+//     private static String repeatZeros(int count) {
+//     StringBuilder sb = new StringBuilder();
+//     for (int i = 0; i < count; i++) {
+//         sb.append("0");
+//     }
+//     return sb.toString();
+// }
+
+// }
+
 package M3;
 
 /*
@@ -23,23 +88,50 @@ public class CommandLineCalculator extends BaseClass {
             return;
         }
 
-        try {
-            System.out.println("Calculating result...");
-            // extract the equation (format is <num1> <operator> <num2>)
+         try {
+            String num1Str = args[0];
+            String operator = args[1];
+            String num2Str = args[2];
 
-            // check if operator is addition or subtraction
+            if (!operator.equals("+") && !operator.equals("-")) {
+                System.out.println("Error: Only + and - operators are supported.");
+                printFooter(ucid, 1);
+                return;
+            }
 
-            // check the type of each number and choose appropriate parsing
+            int decimalPlaces = Math.max(getDecimalPlaces(num1Str), getDecimalPlaces(num2Str));
+            DecimalFormat formatter = new DecimalFormat(getDecimalFormat(decimalPlaces));
 
-            // generate the equation result (Important: ensure decimals display as the
-            // longest decimal passed)
-            // i.e., 0.1 + 0.2 would show as one decimal place (0.3), 0.11 + 0.2 would shows
-            // as two (0.31), etc
+            double num1 = Double.parseDouble(num1Str);
+            double num2 = Double.parseDouble(num2Str);
+            double result = operator.equals("+") ? num1 + num2 : num1 - num2;
 
+            System.out.println("Result: " + formatter.format(result));
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid number format. Please enter valid numbers.");
         } catch (Exception e) {
-            System.out.println("Invalid input. Please ensure correct format and valid numbers.");
+            System.out.println("Unexpected error: " + e.getMessage());
         }
 
         printFooter(ucid, 1);
     }
+
+    private static int getDecimalPlaces(String num) {
+        if (num.contains(".")) {
+            return num.length() - num.indexOf('.') - 1;
+        }
+        return 0;
+    }
+
+    private static String getDecimalFormat(int decimalPlaces) {
+        return decimalPlaces == 0 ? "0" : "0." + repeatZeros(decimalPlaces);
+    }
+
+    private static String repeatZeros(int count) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < count; i++) {
+        sb.append("0");
+    }
+    return sb.toString();
+}
 }
