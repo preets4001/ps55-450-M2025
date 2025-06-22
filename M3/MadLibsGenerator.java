@@ -1,10 +1,13 @@
 package M3;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 /*
 Challenge 3: Mad Libs Generator (Randomized Stories)
 -----------------------------------------------------

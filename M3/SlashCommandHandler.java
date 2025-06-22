@@ -1,19 +1,5 @@
 package M3;
-
-/*
-Challenge 2: Simple Slash Command Handler
------------------------------------------
-- Accept user input as slash commands
-  - "/greet <name>" → Prints "Hello, <name>!"
-  - "/roll <num>d<sides>" → Roll <num> dice with <sides> and returns a single outcome as "Rolled <num>d<sides> and got <result>!"
-  - "/echo <message>" → Prints the message back
-  - "/quit" → Exits the program
-- Commands are case-insensitive
-- Print an error for unrecognized commands
-- Print errors for invalid command formats (when applicable)
-- Capture 3 variations of each command except "/quit"
-*/
-
+import java.util.Random;
 import java.util.Scanner;
 
 public class SlashCommandHandler extends BaseClass {
