@@ -1,0 +1,70 @@
+Science
+What planet is known as the Red Planet?
+A=Earth
+B=Mars
+C=Venus
+D=Jupiter
+B
+History
+Who was the first President of the USA?
+A=George Washington
+B=Abraham Lincoln
+C=John Adams
+D=Thomas Jefferson
+A
+Math
+What is 9 x 9?
+A=81
+B=72
+C=99
+D=90
+A
+Literature
+Who wrote 'Romeo and Juliet'?
+A=Charles Dickens
+B=William Shakespeare
+C=Mark Twain
+D=Jane Austen
+B
+Geography
+What is the capital of France?
+A=Berlin
+B=Madrid
+C=Rome
+D=Paris
+D
+Music
+Which instrument has 88 keys?
+A=Guitar
+B=Violin
+C=Piano
+D=Drums
+C
+Biology
+What gas do plants absorb from the atmosphere?
+A=Oxygen
+B=Nitrogen
+C=Carbon Dioxide
+D=Hydrogen
+C
+Technology
+What does CPU stand for?
+A=Central Power Unit
+B=Central Processing Unit
+C=Computer Program Utility
+D=Control Processing Unit
+B
+Movies
+Which movie features a character named Darth Vader?
+A=The Matrix
+B=Star Wars
+C=Harry Potter
+D=Lord of the Rings
+B
+Sports
+How many players are on a soccer team on the field?
+A=7
+B=9
+C=11
+D=13
+C
