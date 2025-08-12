@@ -1,0 +1,82 @@
+08/11/2025 13:07:47 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 13:21:04 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 13:27:22 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 13:27:25 [client.ClientUI] ([34mFINE[0m):
+> Current View: CONNECT
+08/11/2025 13:28:43 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 13:28:47 [client.ClientUI] ([34mFINE[0m):
+> Received client id: 1
+08/11/2025 13:28:47 [client.ClientUI] ([34mFINE[0m):
+> Current View: CHAT_GAME_SCREEN
+08/11/2025 13:28:47 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=1, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:28:47 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Preet#1
+08/11/2025 13:31:38 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 13:31:45 [client.ClientUI] ([34mFINE[0m):
+> Received client id: 2
+08/11/2025 13:31:45 [client.ClientUI] ([34mFINE[0m):
+> Current View: CHAT_GAME_SCREEN
+08/11/2025 13:31:45 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=2, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:31:45 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Krish#2
+08/11/2025 13:32:34 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=3, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:32:34 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Preet#3
+08/11/2025 13:32:51 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=4, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:32:51 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Deep#4
+08/11/2025 13:33:03 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=5, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:33:03 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: D#5
+08/11/2025 13:49:12 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 13:49:17 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=1, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:49:17 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Preet#1
+08/11/2025 13:49:20 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=2, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:49:20 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Preet#2
+08/11/2025 13:49:31 [client.ClientUI] ([34mFINE[0m):
+> Current View: CONNECT
+08/11/2025 13:49:40 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=3, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:49:40 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Krish#3
+08/11/2025 13:49:50 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=4, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 13:49:50 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Deep#4
+08/11/2025 14:15:28 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=5, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 14:15:28 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Krish#5
+08/11/2025 14:16:39 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 14:16:45 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=1, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 14:16:45 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Preet#1
+08/11/2025 14:17:40 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 14:17:45 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=1, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 14:17:45 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: P#1
+08/11/2025 23:44:33 [client.ClientUI] ([34mFINE[0m):
+> Current View: USER_INFO
+08/11/2025 23:44:39 [client.ClientUI] ([34mFINE[0m):
+> onRoomAction: clientId=1, roomName=null, isJoin=true, isQuiet=false
+08/11/2025 23:44:39 [client.Views.UserListView] ([32mINFO[0m):
+> Adding user to list: Preet#1

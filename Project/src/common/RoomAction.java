@@ -1,6 +1,8 @@
 package common;
 
+import java.util.List;
+
 
 public enum RoomAction {
-    CREATE, JOIN, LEAVE
+    CREATE, JOIN, LEAVE, LIST
 }

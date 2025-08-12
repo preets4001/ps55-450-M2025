@@ -1,21 +1,32 @@
 package client;
 
-
 // Ps55 Date: 2025-07-08
+import common.RoomAction;
 
+import client.Interfaces.IConnectionEvents;
+import client.Interfaces.IMessageEvents;
+import client.Interfaces.IPhaseEvent;
+import client.Interfaces.IRoomEvents;
+import client.TextFX.Color;
+import common.Command;
+import common.ConnectionPayload;
+import common.Constants;
+import common.Payload;
+import common.PayloadType;
+import common.ReadyPayload;
+import common.RoomAction;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import client.TextFX.Color;
-import common.*;
 import server.User;
 
 public enum Client {
@@ -25,24 +36,139 @@ public enum Client {
     private ObjectOutputStream out = null;
     private ObjectInputStream in = null;
 
+    // "/connect 1.2.3.4:12345" or "/connect localhost:12345"
     final Pattern ipAddressPattern = Pattern
             .compile("/connect\\s+(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{3,5})");
     final Pattern localhostPattern = Pattern.compile("/connect\\s+(localhost:\\d{3,5})");
 
     private volatile boolean isRunning = true;
-    private final ConcurrentHashMap<Long, User> knownClients = new ConcurrentHashMap<Long, User>();
+
+    // Known clients in current room/session
+    private final ConcurrentHashMap<Long, User> knownClients = new ConcurrentHashMap<>();
+
+    // UI listeners (wired dynamically by instanceof on register)
+    private final List<IMessageEvents> messageListeners = new ArrayList<>();
+    private final List<IConnectionEvents> connectionListeners = new ArrayList<>();
+    private final List<IRoomEvents> roomListeners = new ArrayList<>();
+    private final List<IPhaseEvent> phaseListeners = new ArrayList<>();
+
+    // "Me"
     private User myUser = new User();
 
     private Client() {
         System.out.println("Client Created");
     }
 
+    /* =========================
+     * Public helpers used by UI
+     * ========================= */
     public boolean isConnected() {
         if (server == null) return false;
         return server.isConnected() && !server.isClosed() && !server.isInputShutdown() && !server.isOutputShutdown();
     }
 
-    private boolean connect(String address, int port) {
+    /** UI uses this to decide if it can show chat/game panels. */
+    public boolean isMyClientIdSet() {
+        return myUser.getClientId() != Constants.DEFAULT_CLIENT_ID;
+    }
+
+    public boolean isMyClientId(long id) {
+        return myUser.getClientId() == id;
+    }
+
+    /** Returns display name for a client id, or a fallback. */
+    public String getDisplayNameFromId(long id) {
+        if (id == Constants.DEFAULT_CLIENT_ID) return "System";
+        if (myUser.getClientId() == id) {
+            String dn = myUser.getDisplayName();
+            if (dn != null && !dn.isBlank()) return dn;
+            String cn = myUser.getClientName();
+            if (cn != null && !cn.isBlank()) return cn;
+            return "You";
+        }
+        User u = knownClients.get(id);
+        if (u != null) {
+            String dn = u.getDisplayName();
+            if (dn != null && !dn.isBlank()) return dn;
+            String cn = u.getClientName();
+            if (cn != null && !cn.isBlank()) return cn;
+        }
+        return "Client-" + id;
+    }
+
+    /**
+     * Views call this: we accept any object and register it to the appropriate listener lists
+     * via instanceof checks (so ChatView / ClientUI / others just call registerCallback(this)).
+     */
+    public synchronized void registerCallback(Object events) {
+        if (events == null) return;
+        if (events instanceof IMessageEvents m && !messageListeners.contains(m)) messageListeners.add(m);
+        if (events instanceof IConnectionEvents c && !connectionListeners.contains(c)) connectionListeners.add(c);
+        if (events instanceof IRoomEvents r && !roomListeners.contains(r)) roomListeners.add(r);
+        if (events instanceof IPhaseEvent p && !phaseListeners.contains(p)) phaseListeners.add(p);
+    }
+
+    /* =========================
+     * Public UI entry points
+     * ========================= */
+
+    /** UI connect method that also sets the username and sends it to the server once connected. */
+    public boolean connect(String host, int port, String username) {
+        if (username != null && !username.isBlank()) {
+            myUser.setClientName(username.trim());
+        }
+        boolean ok = connectInternal(host, port);
+        if (ok) {
+            try {
+                if (myUser.getClientName() != null && !myUser.getClientName().isBlank()) {
+                    sendClientName(myUser.getClientName());
+                }
+            } catch (IOException e) {
+                System.out.println("Failed to send client name: " + e.getMessage());
+            }
+        }
+        return ok;
+    }
+
+    /** Public so ChatView and others can call it. */
+    public void sendMessage(String message) throws IOException {
+        Payload payload = new Payload();
+        payload.setMessage(message);
+        payload.setPayloadType(PayloadType.MESSAGE);
+        sendToServer(payload);
+    }
+
+    /** Public so UI can trigger a clean disconnect. */
+    public void sendDisconnect() throws IOException {
+        Payload payload = new Payload();
+        payload.setPayloadType(PayloadType.DISCONNECT);
+        sendToServer(payload);
+    }
+
+    /** Public for room actions from menus/UI. */
+   // Client.java
+public void sendRoomAction(String roomName, RoomAction roomAction) throws IOException {
+    Payload payload = new Payload();
+    payload.setMessage(roomName);
+    switch (roomAction) {
+        case CREATE: payload.setPayloadType(PayloadType.ROOM_CREATE); 
+        break;
+        case JOIN:   payload.setPayloadType(PayloadType.ROOM_JOIN);   
+        break;
+        case LEAVE:  payload.setPayloadType(PayloadType.ROOM_LEAVE); 
+         break;
+        case LIST:   payload.setPayloadType(PayloadType.ROOM_LIST);   
+        break; // requires #3
+    }
+    sendToServer(payload);
+}
+
+
+    /* =========================
+     * Legacy console flows
+     * ========================= */
+
+    private boolean connectInternal(String address, int port) {
         try {
             server = new Socket(address, port);
             out = new ObjectOutputStream(server.getOutputStream());
@@ -77,7 +203,7 @@ public enum Client {
                     return true;
                 }
                 String[] parts = text.trim().replaceAll(" +", " ").split(" ")[1].split(":");
-                connect(parts[0].trim(), Integer.parseInt(parts[1].trim()));
+                connectInternal(parts[0].trim(), Integer.parseInt(parts[1].trim()));
                 sendClientName(myUser.getClientName());
                 wasCommand = true;
 
@@ -138,43 +264,10 @@ public enum Client {
         return wasCommand;
     }
 
-    private void sendRoomAction(String roomName, RoomAction roomAction) throws IOException {
-        Payload payload = new Payload();
-        payload.setMessage(roomName);
-        switch (roomAction) {
-            case CREATE:
-                payload.setPayloadType(PayloadType.ROOM_CREATE);
-                break;
-            case JOIN:
-                payload.setPayloadType(PayloadType.ROOM_JOIN);
-                break;
-            case LEAVE:
-                payload.setPayloadType(PayloadType.ROOM_LEAVE);
-                break;
-            default:
-                System.out.println(TextFX.colorize("Invalid room action", Color.RED));
-                return;
-        }
-        sendToServer(payload);
-    }
-
     private void sendReverse(String message) throws IOException {
         Payload payload = new Payload();
         payload.setMessage(message);
         payload.setPayloadType(PayloadType.REVERSE);
-        sendToServer(payload);
-    }
-
-    private void sendDisconnect() throws IOException {
-        Payload payload = new Payload();
-        payload.setPayloadType(PayloadType.DISCONNECT);
-        sendToServer(payload);
-    }
-
-    private void sendMessage(String message) throws IOException {
-        Payload payload = new Payload();
-        payload.setMessage(message);
-        payload.setPayloadType(PayloadType.MESSAGE);
         sendToServer(payload);
     }
 
@@ -199,6 +292,10 @@ public enum Client {
         CompletableFuture.runAsync(this::listenToInput).join();
     }
 
+    /* =========================
+     * Networking + dispatch
+     * ========================= */
+
     private void listenToServer() {
         try {
             while (isRunning && isConnected()) {
@@ -219,59 +316,125 @@ public enum Client {
 
     private void processPayload(Payload payload) {
         switch (payload.getPayloadType()) {
-            case CLIENT_CONNECT: break;
-            case CLIENT_ID: processClientData(payload); break;
-            case DISCONNECT: processDisconnect(payload); break;
-            case MESSAGE: processMessage(payload); break;
-            case REVERSE: processReverse(payload); break;
-            case ROOM_CREATE: break; // for later
-            case ROOM_JOIN: case ROOM_LEAVE: case SYNC_CLIENT: processRoomAction(payload); break;
-            default: System.out.println(TextFX.colorize("Unhandled payload type", Color.YELLOW)); break;
+            case CLIENT_CONNECT:
+                // handled by server, no UI event here
+                break;
+            case CLIENT_ID:
+                processClientData(payload);
+                break;
+            case DISCONNECT:
+                processDisconnect(payload);
+                break;
+            case MESSAGE:
+                processMessage(payload);
+                break;
+            case REVERSE:
+                processReverse(payload);
+                break;
+            case ROOM_CREATE:
+                // server will typically follow up with SYNC_CLIENT/ROOM_JOIN
+                break;
+            case ROOM_JOIN:
+            case ROOM_LEAVE:
+            case SYNC_CLIENT:
+                processRoomAction(payload);
+                break;
+            // Future MS3 events like timers, phase changes, points can be added here:
+            // case TIMER: ...
+            // case PHASE: ...
+            default:
+                System.out.println(TextFX.colorize("Unhandled payload type: " + payload.getPayloadType(), Color.YELLOW));
+                break;
         }
     }
+    // at top of file imports:
+// import common.ReadyPayload;  // make sure this exists in your project
+
+public void sendReady(boolean isReady) throws IOException {
+    ReadyPayload payload = new ReadyPayload();
+    payload.setReady(isReady);
+    payload.setPayloadType(PayloadType.READY); // ensure this enum value exists
+    sendToServer(payload);
+}
+
 
     private void processClientData(Payload payload) {
         if (myUser.getClientId() != Constants.DEFAULT_CLIENT_ID) {
             System.out.println(TextFX.colorize("Client ID already set", Color.YELLOW));
         }
         myUser.setClientId(payload.getClientId());
-        myUser.setClientName(((ConnectionPayload) payload).getClientName());
+        if (payload instanceof ConnectionPayload cp) {
+            myUser.setClientName(cp.getClientName());
+        }
         knownClients.put(myUser.getClientId(), myUser);
         System.out.println(TextFX.colorize("Connected", Color.GREEN));
+
+        // Notify UI listeners
+        for (IConnectionEvents l : connectionListeners) {
+            try { l.onReceiveClientId(myUser.getClientId()); } catch (Throwable ignored) {}
+        }
     }
 
     private void processDisconnect(Payload payload) {
-        if (payload.getClientId() == myUser.getClientId()) {
+        long id = payload.getClientId();
+        if (id == myUser.getClientId()) {
             knownClients.clear();
             myUser.reset();
             System.out.println(TextFX.colorize("You disconnected", Color.RED));
-        } else if (knownClients.containsKey(payload.getClientId())) {
-            User disconnectedUser = knownClients.remove(payload.getClientId());
+        } else if (knownClients.containsKey(id)) {
+            User disconnectedUser = knownClients.remove(id);
             System.out.println(TextFX.colorize(disconnectedUser.getDisplayName() + " disconnected", Color.RED));
+        }
+
+        // Notify UI listeners
+        for (IConnectionEvents l : connectionListeners) {
+            try { l.onClientDisconnect(id); } catch (Throwable ignored) {}
         }
     }
 
     private void processRoomAction(Payload payload) {
         if (!(payload instanceof ConnectionPayload)) return;
         ConnectionPayload cp = (ConnectionPayload) payload;
+
         if (cp.getClientId() == Constants.DEFAULT_CLIENT_ID) {
             knownClients.clear();
             return;
         }
+
+        // Try to pull room name from the message text (server formatted)
+        String roomName = extractRoomName(cp.getMessage());
+
         switch (cp.getPayloadType()) {
             case ROOM_LEAVE:
                 knownClients.remove(cp.getClientId());
-                if (cp.getMessage() != null) System.out.println(TextFX.colorize(cp.getMessage(), Color.YELLOW));
+                if (cp.getMessage() != null) {
+                    System.out.println(TextFX.colorize(cp.getMessage(), Color.YELLOW));
+                }
+                // notify UI
+                for (IRoomEvents l : roomListeners) {
+                    try { l.onRoomAction(cp.getClientId(), roomName, /*isJoin*/ false, /*isQuiet*/ false); }
+                    catch (Throwable ignored) {}
+                }
                 break;
-            case ROOM_JOIN: case SYNC_CLIENT:
-                if (cp.getMessage() != null) System.out.println(TextFX.colorize(cp.getMessage(), Color.GREEN));
+
+            case ROOM_JOIN:
+            case SYNC_CLIENT:
+                if (cp.getMessage() != null) {
+                    System.out.println(TextFX.colorize(cp.getMessage(), Color.GREEN));
+                }
                 if (!knownClients.containsKey(cp.getClientId())) {
                     User user = new User();
                     user.setClientId(cp.getClientId());
                     user.setClientName(cp.getClientName());
                     knownClients.put(cp.getClientId(), user);
                 }
+                // notify UI
+                for (IRoomEvents l : roomListeners) {
+                    try { l.onRoomAction(cp.getClientId(), roomName, /*isJoin*/ true, /*isQuiet*/ false); }
+                    catch (Throwable ignored) {}
+                }
                 break;
+
             default:
                 break;
         }
@@ -279,10 +442,17 @@ public enum Client {
 
     private void processMessage(Payload payload) {
         System.out.println(TextFX.colorize(payload.getMessage(), Color.BLUE));
+        // Notify message listeners
+        for (IMessageEvents l : messageListeners) {
+            try { l.onMessageReceive(payload.getClientId(), payload.getMessage()); } catch (Throwable ignored) {}
+        }
     }
 
     private void processReverse(Payload payload) {
         System.out.println(TextFX.colorize(payload.getMessage(), Color.PURPLE));
+        for (IMessageEvents l : messageListeners) {
+            try { l.onMessageReceive(payload.getClientId(), payload.getMessage()); } catch (Throwable ignored) {}
+        }
     }
 
     private void listenToInput() {
@@ -318,5 +488,30 @@ public enum Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /* =========================
+     * Helpers
+     * ========================= */
+
+    /**
+     * Attempts to extract a room name from a human-readable message like
+     * "You joined the Room lobby" or "Bob left the Room my-room".
+     * Returns null if not found (UI tolerates null).
+     */
+    private String extractRoomName(String message) {
+        if (message == null) return null;
+        // common formats: "... Room <name>", case-insensitive
+        Pattern p = Pattern.compile("(?i)\\broom\\s+([A-Za-z0-9 _\\-]+)\\b");
+        Matcher m = p.matcher(message);
+        if (m.find()) {
+            String room = m.group(1).trim();
+            // normalize common punctuation at end
+            if (room.endsWith(".") || room.endsWith("!") || room.endsWith(",")) {
+                room = room.substring(0, room.length() - 1).trim();
+            }
+            return room;
+        }
+        return null;
     }
 }
